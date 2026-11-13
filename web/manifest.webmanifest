@@ -1,4 +1,0 @@
-{ "name": "Eleanor (testnet)", "short_name": "Eleanor", "lang": "cs",
-  "description": "Eleanor – testnet Bitcoin peněženka. Autor a vlastník: Ivo Faltýn — autor, vývojář a vlastník projektu ELFALL / Fallcoin / Eleanor.", "start_url": "./index.html", "scope": "./",
-  "display": "standalone", "background_color": "#0f172a", "theme_color": "#0f172a",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }] }
