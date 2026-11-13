@@ -1,0 +1,49 @@
+[package]
+name = "elfall-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.90"
+description = "ELFALL crypto core: signing-input framing, XChaCha20-Poly1305 vault, Argon2id, Ed25519"
+publish = false
+
+[lib]
+name = "elfall_core"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen"]
+
+[dependencies]
+base64 = "0.23.1"
+getrandom = "0.2"
+zeroize = "1.8.2"
+uniffi = { version = "=0.29.4", optional = true }
+wasm-bindgen = { version = "0.2.128", optional = true }
+bech32 = "0.11"
+bs58 = { version = "0.5", features = ["check"] }
+
+# Nativní cíle (host, Android, iOS): veškerá kryptografie z libsodium.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libsodium-sys-stable = "1.24.2"
+
+# wasm32: libsodium-sys nelze přeložit pro wasm32-unknown-unknown -> jen ověření podpisu (čistý Rust).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+ed25519-dalek = { version = "2.1.1", default-features = false, features = ["std"] }
+
+[features]
+default = []
+ffi = ["dep:uniffi"]
+bindgen = ["ffi", "uniffi/cli"]
+wasm = ["dep:wasm-bindgen", "getrandom/js"]
+
+[dev-dependencies]
+base64 = "0.23.1"
+ed25519-dalek = "2.1.1"
+hex = "0.4"
+
+[profile.release]
+lto = true
+panic = "abort"
+strip = true

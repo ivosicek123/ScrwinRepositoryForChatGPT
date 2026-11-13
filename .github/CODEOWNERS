@@ -1,0 +1,56 @@
+# Každá změna vyžaduje review vlastníka (aktivujte "Require review from Code Owners" v rulesetu).
+*                       @ivosicek123
+/.github/               @ivosicek123
+/shared/                @ivosicek123
+/androidApp/            @ivosicek123
+/iosApp/                @ivosicek123
+/web/_headers           @ivosicek123
+/runpod/                @ivosicek123
+/scripts/               @ivosicek123
+/gradle/                @ivosicek123
+/SECURITY.md            @ivosicek123
+# Kritické hodnoty (issuer, kódy aktiv, ceny, URL poskytovatelů, atribuce) – vždy review vlastníka
+/integrity/                                                   @ivosicek123
+/shared/src/commonMain/kotlin/cz/faltyn/elfall/shared/assets/ @ivosicek123
+/shared/src/commonMain/kotlin/cz/faltyn/elfall/shared/offramp/ @ivosicek123
+/shared/src/commonMain/kotlin/cz/faltyn/elfall/shared/integrity/ @ivosicek123
+/web/.well-known/                                             @ivosicek123
+/AUTHORS                                                      @ivosicek123
+/NOTICE                                                       @ivosicek123
+/LICENSE                                                      @ivosicek123
+/.github/workflows/integrity.yml                              @ivosicek123
+# oidc-hardening: Bank iD OIDC (identita, tokeny) – vždy review vlastníka
+/backend/                                                      @ivosicek123
+/shared/src/commonMain/kotlin/cz/faltyn/elfall/shared/identity/ @ivosicek123
+/web/                                                          @ivosicek123
+/gradle/wrapper/                                               @ivosicek123
+/gradle/verification-metadata.xml                              @ivosicek123
+# kotlin-backend: Ktor server, iOS identita/Secure Enclave, build skripty
+/backend/src/                                                  @ivosicek123
+/backend/build.gradle.kts                                      @ivosicek123
+/settings.gradle.kts                                           @ivosicek123
+/build.gradle.kts                                              @ivosicek123
+/iosApp/iosApp/BankIdAuthSession.swift                         @ivosicek123
+/iosApp/iosApp/SecureEnclaveSigner.swift                       @ivosicek123
+/shared/src/iosMain/                                           @ivosicek123
+/docs/security/                                               @ivosicek123
+/tools/home-defense/                                          @ivosicek123
+/deploy/                                                       @ivosicek123
+/androidApp/src/main/kotlin/cz/faltyn/elfall/android/SodiumVault.kt @ivosicek123
+/iosApp/iosApp/SodiumVault.swift                               @ivosicek123
+/proofs/                                                       @ivosicek123
+/.github/workflows/proofs.yml                                  @ivosicek123
+/backend/src/main/kotlin/cz/faltyn/elfall/backend/bankid/Passkeys.kt @ivosicek123
+/web/passkey-client.js                                         @ivosicek123
+/proofs/rocq/                                                  @ivosicek123
+/backend/src/main/kotlin/cz/faltyn/elfall/backend/bankid/ZeroTrust.kt @ivosicek123
+/deploy/ztna/                                                  @ivosicek123
+# web-leptos: Leptos PWA, CSP generátor, nginx/ingress
+/web-leptos/                                                  @ivosicek123
+/scripts/web-leptos-csp.sh                                     @ivosicek123
+/scripts/build-web-leptos.sh                                   @ivosicek123
+/deploy/web-leptos/                                            @ivosicek123
+# rust-core: kanál a zero-copy GPU C ABI
+/core/src/channel.rs                                           @ivosicek123
+/core/src/gpu.rs                                               @ivosicek123
+/core/include/                                                 @ivosicek123

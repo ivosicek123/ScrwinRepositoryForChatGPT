@@ -1,0 +1,12 @@
+# NENASAZENO – lokální pravidla Suricata (doplněk k ET Open). sid rozsah 9000000+ (lokální).
+alert http any any -> $HOME_NET any (msg:"ELFALL chráněná cesta bez DPoP hlavičky"; flow:to_server,established; http.uri; content:!"/healthz"; content:!"/auth/"; content:!"/passkey/"; content:!"/zt/token"; http.header_names; content:!"DPoP"; sid:9000001; rev:1;)
+alert http any any -> $HOME_NET any (msg:"ELFALL Bearer token místo DPoP"; flow:to_server,established; http.header; content:"Authorization|3a 20|Bearer"; nocase; sid:9000002; rev:1;)
+alert http any any -> $HOME_NET any (msg:"ELFALL alg none v JWT"; flow:to_server,established; http.header; content:"eyJhbGciOiJub25lIi"; sid:9000003; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"ELFALL zastaralé TLS z backendu"; tls.version:1.0; sid:9000004; rev:1;)
+alert http any any -> $HOME_NET any (msg:"ELFALL nadměrné pokusy o /zt/token"; flow:to_server,established; http.uri; content:"/zt/token"; threshold:type both, track by_src, count 20, seconds 60; sid:9000005; rev:1;)
+
+# --- web-leptos / passkeys (SID 9100000+) ---
+alert http any any -> $HOME_NET any (msg:"ELFALL passkey: nadměrné /passkey/login/options"; flow:to_server,established; http.uri; content:"/passkey/login/options"; threshold:type both, track by_src, count 30, seconds 60; classtype:attempted-recon; sid:9100001; rev:1;)
+alert http any any -> $HOME_NET any (msg:"ELFALL: pokus o path traversal"; flow:to_server,established; http.uri; content:".."; classtype:web-application-attack; sid:9100002; rev:1;)
+alert http any any -> $HOME_NET any (msg:"ELFALL: požadavek na seed/privátní klíč v URI"; flow:to_server,established; http.uri; pcre:"/(seed|mnemonic|private[_-]?key)=/i"; classtype:policy-violation; sid:9100003; rev:1;)
+alert tls any any -> $HOME_NET 443 (msg:"ELFALL: TLS < 1.2"; flow:to_server,established; tls.version:1.0; classtype:protocol-command-decode; sid:9100004; rev:1;)

@@ -1,0 +1,19 @@
+# SEP-1 stellar.toml pro ELFALL (Stellar TESTNET). Servírovat na https://elfall.pages.dev/.well-known/stellar.toml
+# s hlavičkou Access-Control-Allow-Origin: *  (viz web/_headers)
+VERSION = "2.7.0"
+NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
+ACCOUNTS = ["GCUMZ6Z7GAYFL2MGSFRG7HXDPL4FRBPZYAYJGTWEEKDI3NJIFUMSRPKT"]
+
+[DOCUMENTATION]
+ORG_NAME = "ELFALL (Ivo Faltýn)"
+ORG_URL = "https://elfall.pages.dev"
+ORG_GITHUB = "ivosicek123"
+
+[[CURRENCIES]]
+code = "FLC"
+issuer = "GCUMZ6Z7GAYFL2MGSFRG7HXDPL4FRBPZYAYJGTWEEKDI3NJIFUMSRPKT"
+status = "test"
+display_decimals = 2
+name = "Fallcoin"
+desc = "Testnet token projektu ELFALL. 0,33 USD je jen zobrazovací konstanta, ne peg."
+is_unlimited = false

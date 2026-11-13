@@ -1,0 +1,31 @@
+# Prometheus alerty pro Zero Trust (metriky z ZtMetrics, interní port 9464 /metrics).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata: { name: elfall-zt, namespace: monitoring, labels: { release: prometheus } }
+spec:
+  groups:
+    - name: elfall-zero-trust
+      rules:
+        - alert: ZtDenySpike
+          expr: sum(rate(elfall_zt_deny_total[5m])) > 3 * sum(rate(elfall_zt_deny_total[1h] offset 1d)) + 0.1
+          for: 10m
+          labels: { severity: warning }
+          annotations: { summary: "Nárůst zamítnutí Zero Trust (401) – útok nebo chybný rollout; zvažte canary-weight=0" }
+        - alert: ZtDenyRatioHigh
+          expr: sum(rate(elfall_zt_deny_total[5m])) / clamp_min(sum(rate(elfall_zt_deny_total[5m])) + sum(rate(elfall_zt_allow_total[5m])), 1) > 0.2
+          for: 10m
+          labels: { severity: critical }
+          annotations: { summary: "> 20 % požadavků zamítnuto Zero Trust – rollback (deploy/rollout/README.md)" }
+        - alert: ZtAuditChainBroken
+          expr: increase(elfall_zt_audit_chain_failures_total[5m]) > 0
+          labels: { severity: critical }
+          annotations: { summary: "Porušený hash řetěz auditního logu – možná manipulace; zajistit důkazy" }
+        - alert: ZtReplayAttempts
+          expr: increase(elfall_zt_dpop_replay_total[10m]) > 5
+          labels: { severity: warning }
+          annotations: { summary: "Opakované DPoP replay pokusy" }
+        - alert: Http401Spike
+          expr: sum(rate(nginx_ingress_controller_requests{namespace="elfall",status="401"}[5m])) > 1
+          for: 10m
+          labels: { severity: warning }
+          annotations: { summary: "Nárůst HTTP 401 na ingressu elfall" }

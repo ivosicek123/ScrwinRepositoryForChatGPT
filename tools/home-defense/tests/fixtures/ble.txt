@@ -1,0 +1,4 @@
+AA:BB:CC:00:00:01 Muse-S 1234
+AA:BB:CC:00:00:02 AirPods Pro
+AA:BB:CC:00:00:03 AirTag
+AA:BB:CC:00:00:04 Living Room TV

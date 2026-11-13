@@ -1,0 +1,9 @@
+name = "elfall_signing"
+description = "SPARK: Ed25519 signing-input framing + zeroization"
+version = "0.1.0"
+authors = ["ELFALL"]
+project-files = ["elfall_signing.gpr"]
+
+[[depends-on]]
+gnat_native = ">=14"
+gnatprove = ">=14"

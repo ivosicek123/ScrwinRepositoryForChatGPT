@@ -1,0 +1,24 @@
+{
+  "schema": "elfall-critical-constants/v1",
+  "author_attribution": "Ivo Faltýn — autor, vývojář a vlastník projektu ELFALL / Fallcoin / Eleanor",
+  "author_github": "ivosicek123",
+  "stellar": {
+    "network": "testnet",
+    "flc_asset_code": "FLC",
+    "yflc_asset_code": "yFLC",
+    "yflc_frozen": true,
+    "flc_issuer_public": "GCUMZ6Z7GAYFL2MGSFRG7HXDPL4FRBPZYAYJGTWEEKDI3NJIFUMSRPKT",
+    "home_domain": "elfall.pages.dev",
+    "flc_reference_usd": 0.33
+  },
+  "offramp_provider_url_prefixes": [
+    "https://sell.moonpay.com?",
+    "https://pay.coinbase.com/v3/sell/input?",
+    "https://www.anycoin.cz/?locale="
+  ],
+  "payout_account_commitment": {
+    "algorithm": "HMAC-SHA256(key=offline_secret_salt, msg=normalized_account)",
+    "value": "UNSET-COMPUTED-OFF-REPO",
+    "note": "Číslo účtu NIKDY není v repozitáři. Hodnota se počítá offline (viz docs/integrity.md); prostý SHA-256 čísla účtu by šel uhodnout hrubou silou."
+  }
+}

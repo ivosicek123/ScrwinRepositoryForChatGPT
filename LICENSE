@@ -1,0 +1,14 @@
+Copyright (c) 2026 Ivo Faltýn (GitHub @ivosicek123)
+Ivo Faltýn — autor, vývojář a vlastník projektu ELFALL / Fallcoin / Eleanor.
+
+All rights reserved. / Všechna práva vyhrazena.
+
+Tento software je autorským dílem (počítačový program, § 2 odst. 2 a § 65 zákona č. 121/2000 Sb.).
+Bez předchozího písemného souhlasu autora není dovoleno software kopírovat, upravovat, šířit
+ani jinak užívat nad rámec zákonných výjimek. Zdrojový kód je zveřejněn pouze ke čtení a revizi.
+
+Third-party notices: tento repozitář vznikl jako fork projektu "bitcoin-wallet"
+(Andreas Schildbach, GNU GPL v3). Větev eleanor-rebuild je nová implementace a neobsahuje
+převzatý kód upstreamu. Pokud by jakákoli část upstreamového kódu byla znovu použita, zůstává pod
+GNU GPL v3 se zachováním původních copyright notices (viz NOTICE). Knihovny třetích stran
+(bitcoin-kmp, Ktor, kotlinx, stellar-sdk, httpx, FastAPI, aj.) podléhají svým licencím.

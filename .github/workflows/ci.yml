@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [ "FaltynIvo", "eleanor-rebuild", "elfall-0.5", "oidc-hardening", "kotlin-backend", "security-review" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/wrapper-validation@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - name: Shared unit tests + Android debug builds (testnet)
+        run: ./gradlew :shared:testDebugUnitTest :backend:test :androidApp:testEleanorBitcoinTestnetDebugUnitTest :androidApp:assembleEleanorBitcoinTestnetDebug :androidApp:assembleElfallBitcoinTestnetDebug --console=plain
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: eleanor-standalone-testnet-apk
+          path: androidApp/build/outputs/apk/eleanorBitcoinTestnet/debug/*.apk
+
+  backend-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - name: Build backend distribution
+        run: ./gradlew :backend:installDist --console=plain
+      - name: Build hardened image and smoke-test with restricted flags
+        run: |
+          docker build -f backend/Dockerfile -t elfall-bankid:ci .
+          docker run -d --name bk --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --cap-drop ALL \
+            --security-opt no-new-privileges:true --user 65532:65532 -p 127.0.0.1:8080:8080 \
+            -e BANKID_CLIENT_ID=ci -e BANKID_CLIENT_SECRET=ci -e BANKID_REDIRECT_URI=https://localhost/cb elfall-bankid:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8080/healthz | grep -q '"ok":true'
+          test "$(docker inspect -f '{{.Config.User}}' elfall-bankid:ci)" = "65532:65532"
+          docker rm -f bk
+
+  ios-shared-tests:
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - name: Shared KMP tests on iOS simulator (incl. OidcCallbackTests, BankIdLoginFlowTests)
+        run: ./gradlew :shared:iosSimulatorArm64Test --dependency-verification=lenient --console=plain  # TODO strict after macOS metadata regeneration
+
+  ios-simulator:
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - name: Build Shared framework (iOS simulator arm64)
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --dependency-verification=lenient --console=plain  # TODO regenerate verification metadata on macOS for Kotlin/Native deps, then make strict
+      - name: Generate Xcode project
+        run: brew install xcodegen && cd iosApp && xcodegen generate
+      - name: Build Eleanor.app (simulator, unsigned)
+        run: |
+          cd iosApp
+          xcodebuild -project Eleanor.xcodeproj -scheme Eleanor -sdk iphonesimulator -arch arm64 \
+            -configuration Debug -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+          cd build/Build/Products/Debug-iphonesimulator && zip -r "$GITHUB_WORKSPACE/Eleanor-simulator.app.zip" Eleanor.app
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: eleanor-ios-simulator-app
+          path: Eleanor-simulator.app.zip
+
+  assistant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with: { python-version: "3.12" }
+      - run: pip install --require-hashes -r runpod/requirements.lock.txt && python -m pytest -q assistant runpod/tests/test_devnet_config.py

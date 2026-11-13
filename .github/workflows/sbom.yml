@@ -1,0 +1,42 @@
+name: SBOM
+
+on:
+  push:
+    branches: [ "eleanor-rebuild" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: SPDX SBOM - Gradle, pip, web
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          path: .
+          format: spdx-json
+          output-file: elfall-sbom.spdx.json
+          upload-artifact: false
+          dependency-snapshot: false
+      - name: CycloneDX SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: elfall-sbom.cdx.json
+          upload-artifact: false
+          dependency-snapshot: false
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: elfall-sbom
+          path: |
+            elfall-sbom.spdx.json
+            elfall-sbom.cdx.json
+          retention-days: 30

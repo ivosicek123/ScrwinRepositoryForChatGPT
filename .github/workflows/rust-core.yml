@@ -1,0 +1,146 @@
+name: rust-core
+
+on:
+  push:
+    branches: [ "rust-core", "ios-uikit-core" ]
+    paths: [ "core/**", ".github/workflows/rust-core.yml", "androidApp/**", "iosApp/**", "web/**", "scripts/build-*.sh" ]
+  pull_request:
+    paths: [ "core/**", ".github/workflows/rust-core.yml", "androidApp/**", "iosApp/**", "web/**", "scripts/build-*.sh" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: { run: { working-directory: core } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Rust 1.90.0 (= lokálně ověřená verze) + wasm target
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal -c clippy -t wasm32-unknown-unknown
+          rustup default 1.90.0
+      - run: cargo test --locked
+      - run: cargo test --locked --features ffi
+      - run: cargo clippy --locked --all-targets --features ffi -- -D warnings
+      - name: wasm build
+        run: cargo build --locked --release --target wasm32-unknown-unknown --features wasm
+      - name: UniFFI bindings (Kotlin + Swift) are up to date
+        run: |
+          cargo build --locked --features bindgen   # debug: release profil stripuje UniFFI metadata
+          ./target/debug/uniffi-bindgen generate --library target/debug/libelfall_core.so --language kotlin --language swift --no-format --out-dir /tmp/b
+          diff -r /tmp/b bindings
+      - name: Swift vazby na Linuxu (Swift předinstalovaný na runneru)
+        working-directory: .
+        run: scripts/test-swift-bindings-linux.sh
+      - name: cargo-deny 0.20.2 (advisories, bans, sources)
+        run: cargo install cargo-deny --version 0.20.2 --locked && cargo deny check advisories bans sources
+
+  android-rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with: { distribution: temurin, java-version: "17" }
+      - name: Rust 1.90.0 + Android targets + cargo-ndk
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal -t aarch64-linux-android -t armv7-linux-androideabi -t x86_64-linux-android
+          rustup default 1.90.0
+          cargo install cargo-ndk --version 3.5.4 --locked
+      - name: NDK 27.3
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.3.13750724" > /dev/null
+      - name: Host lib + JVM interop tests (Rust ↔ lazysodium)
+        run: |
+          (cd core && cargo build --locked --release --features ffi --lib)
+          ./gradlew :androidApp:testElfallBitcoinTestnetDebugUnitTest --console=plain
+      - name: APK s Rust jádrem (příznak zapnut jen v CI buildu)
+        env: { ANDROID_NDK_HOME: "/usr/local/lib/android/sdk/ndk/27.3.13750724" }
+        run: |
+          ./gradlew -Pelfall.rustCore=true :androidApp:assembleElfallBitcoinTestnetDebug --console=plain
+          unzip -l androidApp/build/outputs/apk/elfallBitcoinTestnet/debug/*.apk | grep -c libelfall_core.so | grep -qx 3
+
+  ios-rustcore:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with: { distribution: temurin, java-version: "17" }
+      - name: Rust 1.90.0 + iOS cíle
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal -t aarch64-apple-ios -t aarch64-apple-ios-sim
+          rustup default 1.90.0
+      - name: Shared KMP framework (simulator)
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --dependency-verification=lenient --console=plain
+      - name: ElfallCore.xcframework + vazby (musí sedět s commitnutými)
+        run: |
+          scripts/build-xcframework.sh
+          sed '2d' iosApp/RustCore/elfall_core.swift > /tmp/a.swift; git show HEAD:iosApp/RustCore/elfall_core.swift | sed '2d' > /tmp/b.swift; diff /tmp/a.swift /tmp/b.swift
+      - name: UIKit app – výchozí (RUST_CORE vypnuto) i s Rust jádrem, testy na simulátoru
+        run: |
+          brew install xcodegen
+          cd iosApp
+          xcodegen generate && xcodebuild -project Eleanor.xcodeproj -scheme Eleanor -sdk iphonesimulator -arch arm64 CODE_SIGNING_ALLOWED=NO build
+          xcodegen --spec project-rustcore.yml generate
+          xcodebuild -project Eleanor.xcodeproj -scheme Eleanor -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO test
+
+  web-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Rust 1.90.0 + wasm32 + wasm-bindgen-cli 0.2.129
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal -t wasm32-unknown-unknown && rustup default 1.90.0
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - name: Reprodukovatelnost web/wasm + pin SHA-384
+        run: scripts/build-wasm.sh && git diff --exit-code web/wasm web/core-loader.js
+      - name: Web testy (Node)
+        run: node --test web/tests/
+
+  miri:
+    # Miri (nightly) – UB kontrola zero-copy GPU bufferů bez FFI do libsodium; lokálně ověřeno nightly-2026-10-01
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: { run: { working-directory: core } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: nightly-2026-10-01 + miri
+        run: |
+          rustup toolchain install nightly-2026-10-01 --profile minimal -c miri,rust-src
+          rustup override set nightly-2026-10-01
+      - run: cargo miri setup
+      - run: cargo miri test --locked --test miri_gpu
+        env: { MIRIFLAGS: "-Zmiri-strict-provenance" }
+
+  ios-rustcore-macos:
+    # iOS build s Rust jádrem (RUST_CORE): xcframework + Xcode simulátor, bez podpisu
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Rust 1.90.0 + iOS targety
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal -t aarch64-apple-ios -t aarch64-apple-ios-sim
+          rustup default 1.90.0
+      - name: XCFramework
+        run: scripts/build-xcframework.sh
+        working-directory: .
+      - name: Xcode projekt (RUST_CORE) + build simulátor
+        working-directory: iosApp
+        run: |
+          brew install xcodegen
+          xcodegen generate --spec project-rustcore.yml
+          xcodebuild -list
+          SCHEME=$(xcodebuild -list -json | python3 -c 'import json,sys; print(json.load(sys.stdin)["project"]["schemes"][0])')
+          xcodebuild -scheme "$SCHEME" -sdk iphonesimulator -arch arm64 -configuration Debug \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build

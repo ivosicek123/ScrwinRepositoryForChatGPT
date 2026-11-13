@@ -1,0 +1,40 @@
+name: Integrity (signed critical constants)
+
+on:
+  push:
+    branches: [ "eleanor-rebuild", "bankid-sandbox", "elfall-0.5", "oidc-hardening", "kotlin-backend", "security-review", "FaltynIvo" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with: { python-version: "3.12" }
+      - name: Verify manifest hashes and pinned constants
+        run: python3 scripts/integrity_manifest.py verify --no-signature
+      - name: Gradle wrapper pinned (distributionSha256Sum + dependency verification on)
+        run: |
+          grep -Eq '^distributionSha256Sum=[0-9a-f]{64}$' gradle/wrapper/gradle-wrapper.properties
+          grep -q '<verify-metadata>true</verify-metadata>' gradle/verification-metadata.xml
+          ! grep -RInE 'BANKID_CLIENT_SECRET=[^c$ ]|-----BEGIN [A-Z ]*PRIVATE KEY' --exclude-dir=.git --exclude-dir=.github . 
+      - name: Unit tests of the integrity checker
+        run: pip install "pytest==8.3.5" && python -m pytest -q scripts/tests
+      - name: Manifest is SHA-512 and signers are Ed25519 only
+        run: |
+          awk '{ if (length($1) != 128) exit 1 }' integrity/MANIFEST.sha512
+          ! grep -vE '^\s*(#|$)' integrity/allowed_signers | grep -vE ' (ssh-ed25519|sk-ssh-ed25519@openssh\.com) '
+      - name: Home-defense toolkit tests (bash, offline fixtures)
+        run: tools/home-defense/tests/run.sh
+      - name: Web OIDC client tests (node:test)
+        run: node --test web/tests/*.test.js
+      - name: Verify owner signature (fails until owner adds key to integrity/allowed_signers) – last so other checks still run)
+        run: python3 scripts/integrity_manifest.py verify

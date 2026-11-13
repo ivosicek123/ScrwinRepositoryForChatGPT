@@ -1,0 +1,91 @@
+name: Formal proofs (EasyCrypt, SPARK, Idris2, Rocq)
+
+on:
+  push:
+    branches: [ "security-review", "zero-trust", "FaltynIvo" ]
+    paths: [ "proofs/**", ".github/workflows/proofs.yml", "androidApp/src/main/kotlin/cz/faltyn/elfall/android/SodiumVault.kt", "iosApp/iosApp/SodiumVault.swift" ]
+  pull_request:
+    paths: [ "proofs/**", ".github/workflows/proofs.yml" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  EASYCRYPT_REF: e7eff05dcef179fbd0b428e987632278e526b862   # pinned commit (main, 2026-10-09)
+
+jobs:
+  easycrypt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: System provers
+        run: sudo apt-get update -q && sudo apt-get install -y -q z3 libgmp-dev pkg-config libmpfr-dev libpcre2-dev zlib1g-dev
+      - uses: ocaml/setup-ocaml@93303b622b2522e4411e295f9e77411a24912ac7 # v3.9.0
+        with: { ocaml-compiler: "4.14.2" }
+      - name: Install EasyCrypt (pinned) + Alt-Ergo
+        run: |
+          opam pin add -y -n easycrypt "git+https://github.com/EasyCrypt/easycrypt.git#${EASYCRYPT_REF}"
+          opam install -y easycrypt alt-ergo.2.6.0
+          opam exec -- easycrypt why3config
+      - name: Check proofs
+        run: |
+          for f in proofs/easycrypt/*.ec; do echo "== $f"; opam exec -- easycrypt compile -timeout 30 "$f"; done
+
+  spark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Install Alire 2.1.0 (checksum-verified)
+        run: |
+          curl -sSfL -o /tmp/alr.zip https://github.com/alire-project/alire/releases/download/v2.1.0/alr-2.1.0-bin-x86_64-linux.zip
+          echo "${ALR_SHA256}  /tmp/alr.zip" | sha256sum -c -
+          unzip -q /tmp/alr.zip -d /tmp/alire && echo /tmp/alire/bin >> "$GITHUB_PATH"
+        env: { ALR_SHA256: "e3b32cb0afe981b23d1a68da77452cf81ee1d82de8ebaf01c5e233be8b463fbe" }
+      - name: gnatprove (absence of runtime errors + contracts)
+        working-directory: proofs/spark
+        run: |
+          alr -n toolchain --select gnat_native gprbuild
+          alr -n update
+          alr -n exec -- gnatprove -P elfall_signing.gpr -j0
+
+  idris2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: { contents: read }
+    env: { IDRIS2_REF: "v0.7.0" }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - name: Build Idris2 (pinned tag) from source
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q chezscheme
+          git clone -q --depth 1 --branch "$IDRIS2_REF" https://github.com/idris-lang/Idris2.git /tmp/idris2
+          make -C /tmp/idris2 bootstrap SCHEME=chezscheme -j4 && make -C /tmp/idris2 install PREFIX=$HOME/.idris2
+          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
+      - name: Check FLC invariants
+        working-directory: proofs/idris
+        run: idris2 --check FLC.idr
+
+  rocq:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { persist-credentials: false }
+      - uses: ocaml/setup-ocaml@93303b622b2522e4411e295f9e77411a24912ac7 # v3.9.0
+        with: { ocaml-compiler: "4.14.2" }
+      - name: Install Rocq (pinned)
+        run: opam install -y rocq-core.9.3.0 rocq-stdlib.9.2.0
+      - name: Check Rocq proofs (KeyPolicy, Framing)
+        working-directory: proofs/rocq
+        run: |
+          for f in *.v; do opam exec -- rocq compile "$f"; done
+          ! grep -nE "Admitted|admit\." *.v

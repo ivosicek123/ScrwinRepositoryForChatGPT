@@ -1,0 +1,27 @@
+# Ingress pro Leptos PWA. CSP nastavuje pod (nginx.conf + vygenerovaný elfall-csp.conf),
+# ne anotace configuration-snippet (ta bývá v ingress-nginx z bezpečnostních důvodů vypnutá).
+# Ingress jen vynutí HTTPS a hlavičky, které nezávisí na buildu.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eleanor-web
+  namespace: elfall
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [ app.example.invalid ]      # doplní vlastník při nasazení
+      secretName: eleanor-web-tls
+  rules:
+    - host: app.example.invalid
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: eleanor-web, port: { number: 8080 } } }
+---
+# CSP z buildu: kubectl create configmap eleanor-web-csp --from-file=elfall-csp.conf=web-leptos/dist/nginx-csp.conf
+# (namountovat do /etc/nginx/elfall-csp.conf; nginx.conf do /etc/nginx/conf.d/default.conf)

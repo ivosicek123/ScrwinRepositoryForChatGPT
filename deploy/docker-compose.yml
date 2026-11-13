@@ -1,0 +1,21 @@
+# Lokální/sandbox běh Bank iD backendu s omezeními kontejneru. Jen pro privátní prostředí – NE veřejné nasazení.
+# Spuštění: ./gradlew :backend:installDist && docker compose -f deploy/docker-compose.yml up --build
+services:
+  bankid:
+    build: { context: .., dockerfile: backend/Dockerfile }
+    image: elfall-bankid:local
+    env_file: ../backend/.env            # NIKDY necommitovat; vzor backend/.env.example
+    environment: { BIND: "0.0.0.0", PORT: "8080" }
+    ports: [ "127.0.0.1:8080:8080" ]     # jen loopback hostitele
+    user: "65532:65532"
+    read_only: true
+    tmpfs: [ "/tmp:rw,noexec,nosuid,size=64m" ]
+    cap_drop: [ ALL ]
+    security_opt:
+      - no-new-privileges:true
+      # seccomp: výchozí profil Dockeru (nepřepínat na unconfined)
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    healthcheck: { disable: true }       # distroless nemá shell/curl; zdraví sleduje orchestrátor přes /healthz

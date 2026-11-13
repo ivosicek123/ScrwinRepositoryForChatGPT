@@ -1,0 +1,22 @@
+# Cilium (eBPF) – L3/L4/L7 politika jen na serveru. Klienti nic nekonfigurují.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: eleanor-web, namespace: elfall }
+spec:
+  endpointSelector: { matchLabels: { app: eleanor-web } }
+  ingress:
+    - fromEndpoints: [ { matchLabels: { "k8s:io.kubernetes.pod.namespace": ingress-nginx } } ]
+      toPorts:
+        - ports: [ { port: "8080", protocol: TCP } ]
+          rules:
+            http:
+              - { method: GET, path: "/.*" }
+              - { method: POST, path: "/passkey/(register|login)/(options|verify)" }
+  egress:
+    - toEndpoints: [ { matchLabels: { app: bankid } } ]
+      toPorts: [ { ports: [ { port: "8080", protocol: TCP } ] } ]
+    - toEndpoints: [ { matchLabels: { "k8s:io.kubernetes.pod.namespace": kube-system, k8s-app: kube-dns } } ]
+      toPorts: [ { ports: [ { port: "53", protocol: UDP } ] } ]
+---
+# XDP drop (jen vlastní hosting / bare metal; u managed k8s/CDN zbytečné): Cilium s
+# --bpf-lb-acceleration=native a CiliumClusterwideNetworkPolicy s ingressDeny pro blokované CIDR.

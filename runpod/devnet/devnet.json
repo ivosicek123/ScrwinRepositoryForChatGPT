@@ -1,0 +1,33 @@
+{
+  "_comment": "ELFALL developer testnet config. Public endpoints only, NO keys/secrets. Not deployed (RunPod balance $0).",
+  "name": "elfall-devnet",
+  "chains": [
+    {"id": "tBTC", "chain": "bitcoin-testnet", "symbol": "BTC", "decimals": 8,
+     "rpc": ["https://mempool.space/testnet/api", "https://blockstream.info/testnet/api"],
+     "explorer": "https://mempool.space/testnet", "faucet": "https://coinfaucet.eu/en/btc-testnet/"},
+    {"id": "sBTC", "chain": "bitcoin-signet", "symbol": "BTC", "decimals": 8,
+     "rpc": ["https://mempool.space/signet/api", "https://blockstream.info/signet/api"],
+     "explorer": "https://mempool.space/signet", "faucet": "https://signetfaucet.com/"},
+    {"id": "sepETH", "chain": "ethereum-sepolia", "symbol": "ETH", "decimals": 18, "chainId": 11155111,
+     "rpc": ["https://ethereum-sepolia-rpc.publicnode.com", "https://rpc.sepolia.org"],
+     "explorer": "https://sepolia.etherscan.io", "faucet": "https://cloud.google.com/application/web3/faucet/ethereum/sepolia"},
+    {"id": "tLTC", "chain": "litecoin-testnet", "symbol": "LTC", "decimals": 8,
+     "rpc": ["https://litecoinspace.org/testnet/api"],
+     "explorer": "https://litecoinspace.org/testnet", "faucet": "https://litecointf.salmen.website/"},
+    {"id": "XLM", "chain": "stellar-testnet", "symbol": "XLM", "decimals": 7,
+     "rpc": ["https://horizon-testnet.stellar.org"],
+     "explorer": "https://stellar.expert/explorer/testnet", "faucet": "https://friendbot.stellar.org"},
+    {"id": "devSOL", "chain": "solana-devnet", "symbol": "SOL", "decimals": 9,
+     "rpc": ["https://api.devnet.solana.com"],
+     "explorer": "https://explorer.solana.com/?cluster=devnet", "faucet": "https://faucet.solana.com/"}
+  ],
+  "tokens": [
+    {"id": "FLC", "code": "FLC", "chain": "stellar-testnet", "type": "credit_alphanum4",
+     "issuer": "GCUMZ6Z7GAYFL2MGSFRG7HXDPL4FRBPZYAYJGTWEEKDI3NJIFUMSRPKT",
+     "display_price_usd": 0.33, "display_only": true},
+    {"id": "yFLC", "code": "yFLC", "chain": "stellar-testnet", "type": "credit_alphanum4",
+     "issuer": "GCUMZ6Z7GAYFL2MGSFRG7HXDPL4FRBPZYAYJGTWEEKDI3NJIFUMSRPKT",
+     "display_price_usd": null, "display_only": true, "frozen": true}
+  ],
+  "limits": {"max_requests_per_minute_per_ip": 60, "mainnet_signing": false}
+}

@@ -1,0 +1,79 @@
+# Canary Zero Trust: stabilní "bankid" (ZT_ENABLE=false) + "bankid-zt" (ZT_ENABLE=true).
+# Váhu měňte jen v Ingressu bankid-zt-canary: 1 -> 10 -> 50 -> 100 (viz README.md). Žádná tajemství v souboru:
+# podpisový klíč je v Secret "zt-signing" (soubor jwk), vytvořený mimo repozitář.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: bankid-zt, namespace: elfall, labels: { app: bankid-zt, track: canary } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bankid-zt } }
+  template:
+    metadata:
+      labels: { app: bankid-zt, track: canary }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/port: "9464" }
+    spec:
+      automountServiceAccountToken: false
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: bankid
+          image: ghcr.io/ivosicek123/elfall-bankid@sha256:REPLACE_WITH_BUILT_DIGEST
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          ports: [ { containerPort: 8080, name: http }, { containerPort: 9464, name: metrics } ]
+          envFrom: [ { secretRef: { name: bankid-oidc } } ]
+          env:
+            - { name: BIND, value: "0.0.0.0" }
+            - { name: PORT, value: "8080" }
+            - { name: ZT_ENABLE, value: "true" }
+            - { name: ZT_PUBLIC_BASE_URL, value: "https://api.elfall.example" }
+            - { name: ZT_SIGNING_JWK_FILE, value: /var/run/secrets/zt/jwk }
+            - { name: ZT_REVOCATION_FILE, value: /var/lib/elfall/zt-revocations.log }
+            - { name: ZT_METRICS_BIND, value: "0.0.0.0" }
+          readinessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /healthz, port: http }, periodSeconds: 30 }
+          volumeMounts:
+            - { name: zt-signing, mountPath: /var/run/secrets/zt, readOnly: true }
+            - { name: zt-state, mountPath: /var/lib/elfall }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: zt-signing, secret: { secretName: zt-signing, defaultMode: 0400 } }
+        - { name: zt-state, persistentVolumeClaim: { claimName: bankid-zt-state } }
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: bankid-zt-state, namespace: elfall }
+spec: { accessModes: [ReadWriteOnce], resources: { requests: { storage: 1Gi } } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: bankid-zt, namespace: elfall }
+spec:
+  selector: { app: bankid-zt }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bankid-zt-canary
+  namespace: elfall
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "1"   # krok 1: 1 %, krok 2: 10, krok 3: 50, krok 4: 100
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.elfall.example
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: bankid-zt, port: { name: http } } } } ] }
+---
+# metriky smí číst jen Prometheus z namespace monitoring
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: bankid-zt, namespace: elfall }
+spec:
+  podSelector: { matchLabels: { app: bankid-zt } }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [ { namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } } } ]
+      ports: [ { port: 8080, protocol: TCP } ]
+    - from: [ { namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: monitoring } } } ]
+      ports: [ { port: 9464, protocol: TCP } ]

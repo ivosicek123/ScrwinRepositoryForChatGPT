@@ -1,0 +1,5 @@
+# Copy to local.properties (gitignored). No API keys are required:
+# the app talks to public Esplora (mempool.space / blockstream.info) endpoints.
+sdk.dir=/path/to/Android/sdk
+# Optional: override the Esplora backend
+# esplora_url=https://mempool.space/testnet/api

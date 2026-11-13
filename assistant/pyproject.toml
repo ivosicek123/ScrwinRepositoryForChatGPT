@@ -1,0 +1,9 @@
+[project]
+name = "elfall-assistant"
+version = "0.4.2"
+description = "ELFALL assistant – Ivo Faltýn — autor, vývojář a vlastník projektu ELFALL / Fallcoin / Eleanor"
+authors = [{ name = "Ivo Faltýn", email = "324165531+ivosicek123@users.noreply.github.com" }]
+maintainers = [{ name = "Ivo Faltýn", email = "324165531+ivosicek123@users.noreply.github.com" }]
+license = { text = "Proprietary - all rights reserved, see LICENSE in repository root" }
+requires-python = ">=3.11"
+urls = { Homepage = "https://github.com/ivosicek123/bitcoin-wallet-android" }

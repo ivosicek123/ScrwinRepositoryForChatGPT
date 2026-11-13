@@ -1,0 +1,20 @@
+# NENASAZENO – návrh (vyžaduje Cilium jako CNI). Deny-by-default L3–L7 pro bankid backend.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata: { name: bankid-zt, namespace: elfall }
+spec:
+  endpointSelector: { matchLabels: { app: bankid } }
+  ingress:
+    - fromEndpoints: [ { matchLabels: { app: ingress } } ]
+      toPorts:
+        - ports: [ { port: "8000", protocol: TCP } ]
+          rules:
+            http:
+              - { method: "GET",  path: "/healthz" }
+              - { method: "POST", path: "/(auth|passkey|zt)/.*" }
+              - { method: "GET|POST", path: "/.*", headers: [ "DPoP" ] }   # ostatní jen s DPoP (ověří i aplikace)
+  egress:
+    - toFQDNs: [ { matchName: "oidc.sandbox.bankid.cz" }, { matchName: "oidc.bankid.cz" } ]
+      toPorts: [ { ports: [ { port: "443", protocol: TCP } ] } ]
+    - toEndpoints: [ { matchLabels: { "k8s:io.kubernetes.pod.namespace": kube-system, k8s-app: kube-dns } } ]
+      toPorts: [ { ports: [ { port: "53", protocol: UDP } ], rules: { dns: [ { matchPattern: "*" } ] } } ]

@@ -1,0 +1,18 @@
+# Varianta s Rust jádrem: xcodegen --spec project-rustcore.yml (po scripts/build-xcframework.sh).
+# Výchozí project.yml zůstává bez Rustu (RUST_CORE vypnuto).
+include: [ project.yml ]
+targets:
+  Eleanor:
+    dependencies:
+      - framework: ../core/build/ElfallCore.xcframework
+        embed: false
+    settings:
+      base:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) RUST_CORE"
+  EleanorTests:
+    dependencies:
+      - framework: ../core/build/ElfallCore.xcframework
+        embed: false
+    settings:
+      base:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) RUST_CORE"

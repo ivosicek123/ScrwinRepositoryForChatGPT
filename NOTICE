@@ -1,0 +1,16 @@
+ELFALL / Fallcoin (FLC) / yFLC / Eleanor wallet
+Copyright (c) 2026 Ivo Faltýn (GitHub @ivosicek123). All rights reserved.
+Ivo Faltýn — autor, vývojář a vlastník projektu ELFALL / Fallcoin / Eleanor.
+
+Názvy ELFALL, Fallcoin, FLC, yFLC a Eleanor užívá autor jako označení svého projektu.
+
+Upstream: repozitář je fork https://github.com/bitcoin-wallet/bitcoin-wallet
+(Copyright (C) the original authors, Andreas Schildbach et al., GNU General Public License v3).
+Původní upstream notices zůstávají zachovány v historii Gitu; aktuální strom neobsahuje upstream kód.
+
+Komponenty třetích stran (vlastní licence): fr.acinq bitcoin-kmp (Apache-2.0), Ktor (Apache-2.0),
+kotlinx.coroutines / kotlinx.serialization (Apache-2.0), stellar-sdk Python (Apache-2.0),
+httpx (BSD-3), FastAPI (MIT), runpod (MIT), web/vendor-qr.js (qrcode-generator, MIT, Kazuhiko Arase).
+Úplný seznam: SBOM artefakt z workflow .github/workflows/sbom.yml.
+
+Ověření vlastníka: Totožnost vlastníka a autora (Ivo Faltýn, GitHub @ivosicek123) je ověřitelná přes Bankovní identitu (Bank iD, Bankovní identita, a.s.); integrace viz docs/bankid.md. Repozitář neobsahuje žádné osobní údaje.
