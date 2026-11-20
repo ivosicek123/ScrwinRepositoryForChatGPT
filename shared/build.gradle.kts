@@ -4,7 +4,7 @@ plugins {
     id("com.android.library")
 }
 
-val ktorVersion = "3.1.3"
+val ktorVersion = "3.6.1"
 
 kotlin {
     androidTarget {
