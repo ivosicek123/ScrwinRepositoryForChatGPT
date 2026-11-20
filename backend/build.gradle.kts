@@ -25,5 +25,5 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
-    testImplementation("com.webauthn4j:webauthn4j-test:0.31.11.RELEASE")
+    testImplementation("com.webauthn4j:webauthn4j-test:0.32.0.RELEASE")
 }
