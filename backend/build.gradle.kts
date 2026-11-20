@@ -20,7 +20,7 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:10.3")
     implementation("com.google.crypto.tink:tink:1.16.0") // Ed25519Signer/Verifier v nimbus
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-    implementation("ch.qos.logback:logback-classic:1.6.5")
+    implementation("ch.qos.logback:logback-classic:1.6.6")
     implementation("com.webauthn4j:webauthn4j-core:0.31.11.RELEASE")
     testImplementation(kotlin("test-junit"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
