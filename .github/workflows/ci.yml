@@ -27,7 +27,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
       - name: Shared unit tests + Android debug builds (testnet)
         run: ./gradlew :shared:testDebugUnitTest :backend:test :androidApp:testEleanorBitcoinTestnetDebugUnitTest :androidApp:assembleEleanorBitcoinTestnetDebug :androidApp:assembleElfallBitcoinTestnetDebug --console=plain
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eleanor-standalone-testnet-apk
           path: androidApp/build/outputs/apk/eleanorBitcoinTestnet/debug/*.apk
@@ -88,7 +88,7 @@ jobs:
           xcodebuild -project Eleanor.xcodeproj -scheme Eleanor -sdk iphonesimulator -arch arm64 \
             -configuration Debug -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
           cd build/Build/Products/Debug-iphonesimulator && zip -r "$GITHUB_WORKSPACE/Eleanor-simulator.app.zip" Eleanor.app
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: eleanor-ios-simulator-app
           path: Eleanor-simulator.app.zip
