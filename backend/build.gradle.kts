@@ -17,7 +17,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.10")
     implementation("com.google.crypto.tink:tink:1.16.0") // Ed25519Signer/Verifier v nimbus
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("ch.qos.logback:logback-classic:1.6.5")
