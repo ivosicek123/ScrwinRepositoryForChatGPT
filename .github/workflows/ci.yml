@@ -23,7 +23,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with: { distribution: temurin, java-version: "17" }
-      - uses: gradle/actions/wrapper-validation@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
+      - uses: gradle/actions/wrapper-validation@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
       - uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
       - name: Shared unit tests + Android debug builds (testnet)
         run: ./gradlew :shared:testDebugUnitTest :backend:test :androidApp:testEleanorBitcoinTestnetDebugUnitTest :androidApp:assembleEleanorBitcoinTestnetDebug :androidApp:assembleElfallBitcoinTestnetDebug --console=plain
