@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.application") version "8.7.3" apply false
+    id("com.android.application") version "9.5.3" apply false
     id("com.android.library") version "8.7.3" apply false
     kotlin("multiplatform") version "2.3.10" apply false
     kotlin("android") version "2.3.10" apply false
