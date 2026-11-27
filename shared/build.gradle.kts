@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // Pure-Kotlin multiplatform Bitcoin library (BIP32/39/84, tx building, signing)
-            implementation("fr.acinq.bitcoin:bitcoin-kmp:0.32.0")
+            implementation("fr.acinq.bitcoin:bitcoin-kmp:0.33.0")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
             implementation("io.ktor:ktor-client-core:$ktorVersion")
