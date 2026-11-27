@@ -1,5 +1,5 @@
 # Top-level ranges. Pinned + hashed lock: requirements.lock.txt (pip-compile --generate-hashes --allow-unsafe). Install: pip install --require-hashes -r requirements.lock.txt
-runpod>=1.7.0
+runpod>=2.3.0
 httpx>=0.27.0
 fastapi>=0.115.0
 uvicorn>=0.32.0

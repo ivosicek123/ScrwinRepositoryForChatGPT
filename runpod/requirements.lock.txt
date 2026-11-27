@@ -2531,9 +2531,9 @@ rignore==0.8.1 \
     --hash=sha256:fe7a7dcd84affbf312336991202c11922c13aff323e2857c5baf10afc0dd7f2d \
     --hash=sha256:ff09db59f672d929bca88ee7089d3697256967df76a2bab8b187208f2b517bc0
     # via fastapi-cloud-cli
-runpod==1.12.0 \
-    --hash=sha256:2c52d5ad4268879bd4d8288f84a9861488abc756ffc5195d95f1cffe4c4f3454 \
-    --hash=sha256:511c6b751221a9890450aa2ddedc0c50d4d64aa3a008aab0d7a23a84792dbb85
+runpod==2.3.0 \
+    --hash=sha256:548aa9b60a92fe51b8c90d2c1b2b744180771dfe78aac8e6dc687c49612a51cf \
+    --hash=sha256:dc129f4c31e6276ed4af6889e46cd5e3b969882233be2ebdf747037c7a371fa4
     # via -r requirements.txt
 s3transfer==0.19.2 \
     --hash=sha256:ba0309fd86be3c27dbf78cdd813c13c5e1df16e5874b99d2535ebbdfb9892993 \
