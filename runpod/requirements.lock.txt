@@ -377,9 +377,9 @@ boto3==1.43.113 \
     --hash=sha256:2e6fa2eef6decd7cbe5cf55b4ccc3218a3784630e54cb5e7e7f7074437dda281 \
     --hash=sha256:5a3e7750325c22fab0957c41a500fe2f95a936c2bbcf5c18f58472ba5ffbb792
     # via runpod
-botocore==1.43.113 \
-    --hash=sha256:8908e4a5fe94a06801a7bf4c451717a38145cc4ffa41aaffa50665940b64b4fa \
-    --hash=sha256:941d3f0e289540da7c49d5e2dc022f992e3638127a02a74a0c91df2661bd98ef
+botocore==1.44.7 \
+    --hash=sha256:3cbf1d9f50b5f1f95b715e570bc03b8c7c94b86777f96dd647321134f57290b2 \
+    --hash=sha256:56ec7cf3a7c0012c7e105c8f498c67077afa722df916dbdbe667b584fe7e5f99
     # via
     #   boto3
     #   s3transfer
